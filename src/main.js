@@ -86,7 +86,7 @@ const AGENT_MESSAGES = {
     init: "호스트님의 입력 사항을 확인했습니다!\n\n**[회의 기획안 접수]**\n• 회의명: 생성형 AI 플랫폼 활용도 제고 방안\n• 회의 안건: 생성형 AI 플랫폼을 활용하여 업무를 효율화 할 수 있는 아이디어 회의\n• 첨부 자료: AI_타행활용사례.pdf\n\n호스트님의 향후 캘린더 일정을 분석한 결과, 아래 일자들이 회의 개설이 가능합니다. **선호하시는 일자와 시간대**를 선택해 주세요.",
     actions: [
       { text: "추천 1순위: 6월 20일(토) 14:00 ~ 15:30 선택", action: "select_time_1" },
-      { text: "추천 2순위: 6월 1일(월) 10:00 ~ 11:30 선택", action: "select_time_2" }
+      { text: "추천 2순위: 6월 24일(수) 10:00 ~ 11:30 선택", action: "select_time_2" }
     ]
   },
   3: {
@@ -242,7 +242,7 @@ function handleStepTransitions(step) {
     document.getElementById('suggestion-reason-text').textContent = "호스트 캘린더 여유 일자";
     SmartSuggestionList.innerHTML = `
       <button class="suggest-btn" data-time="6/20 14:00">6월 20일(토) 14:00~15:30</button>
-      <button class="suggest-btn" data-time="6/1 10:00">6월 1일(월) 10:00~11:30</button>
+      <button class="suggest-btn" data-time="6/24 10:00">6월 24일(수) 10:00~11:30</button>
     `;
     
     // 스마트 추천 시간 클릭 바인딩
@@ -347,11 +347,11 @@ async function handleAction(actionName) {
       break;
       
     case "select_time_2":
-      appState.selectedDate = '2026-06-01';
+      appState.selectedDate = '2026-06-24';
       appState.selectedTimeStart = '10:00';
       appState.selectedTimeEnd = '11:30';
-      CalDateLabel.textContent = "2026년 6월 1일 (월요일)";
-      showToast("회의 일정이 6월 1일 10:00로 가설정되었습니다.", "success");
+      CalDateLabel.textContent = "2026년 6월 24일 (수요일)";
+      showToast("회의 일정이 6월 24일 10:00로 가설정되었습니다.", "success");
       await runStep(3);
       break;
       
