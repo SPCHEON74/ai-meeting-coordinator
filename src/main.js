@@ -16,12 +16,12 @@ let appState = {
   autoMode: false, // 자율 모드(Auto-run): true면 추천 액션을 자동 실행
 
   // 회의 기본 정보
-  meetingName: '2026 Q3 마케팅 전략 및 예산 조율 회의',
-  meetingAgenda: '브랜드 인지도 제고 방안 수립 및 플랫폼 광고 예산 조정 타당성 검토',
-  meetingAttachment: 'Q3_Marketing_Draft_v1.1.pdf',
-  
+  meetingName: '생성형 AI 플랫폼 활용도 제고 방안',
+  meetingAgenda: '생성형 AI 플랫폼을 활용하여 업무를 효율화 할 수 있는 아이디어 회의',
+  meetingAttachment: 'AI_타행활용사례.pdf',
+
   // 일정 조율 상태
-  selectedDate: '2026-05-29', // 금요일 기본 지정
+  selectedDate: '2026-06-20', // 토요일 기본 지정
   selectedTimeStart: '14:00',
   selectedTimeEnd: '15:30',
   
@@ -45,23 +45,23 @@ let appState = {
   
   // 회의 알림 및 피드백 상태
   telegramAnswers: {}, // 24시간 전 응답 상태 { empId: 'yes' | 'no' }
-  minutesDraft: `[2026 Q3 마케팅 전략 및 예산 조율 회의록 초안]
-일시: 2026년 5월 29일 14:00 - 15:30
+  minutesDraft: `[생성형 AI 플랫폼 활용도 제고 방안 회의록 초안]
+일시: 2026년 6월 20일 16:00 - 17:30
 장소: 크리에이티브룸 (신관 2층)
-참석자: 김경남(호스트), 김마케(필수), 이디자(필수), 박예산(필수)
+참석자: 김경남(호스트), 이데이(필수), 박시스(필수), 최혁신(필수)
 
 [핵심 요약]
-- 브랜드 인지도 제고를 위한 하반기 신규 마케팅 전략 수립 및 기획 방안 공유.
-- 모바일 광고 및 퍼포먼스 마케팅 플랫폼 신규 예산 집행 요청 건 검토.
+- 행내 생성형 AI 플랫폼(SNAP) 활용 현황 점검 및 부서별 업무 효율화 아이디어 공유.
+- 타행 AI 활용 사례(AI_타행활용사례.pdf) 검토 후 적용 가능 업무 영역 도출.
 
 [결정 사항]
-1. 김마케 팀장은 플랫폼 신규 광고안 상세 견적 및 기획안을 보강하기로 함.
-2. 이디자 대리는 신규 CI가 적용된 브랜드 광고 시안 리뉴얼 작업을 6월 초까지 완료.
-3. 박예산 과장은 검토된 광고 예산 한도를 최대 15% 이내에서 긍정 검토하기로 유예.
+1. 여신심사 자동 초안 생성 기능을 시범 적용하여 심사 처리 시간 단축 가능성 검토.
+2. 고객 상담 AI 어시스턴트 도입 시 상담 품질 지표(CSAT) 측정 기준 마련 필요.
+3. AI 생성 문서에 대한 최종 책임자 검토 프로세스를 반드시 병행하도록 내규 보완.
 
 [Action Items]
-- Q3 광고 시안 최종안 제출 (담당자: 이디자 대리, 기한: 6/5)
-- 추가 예산 승인 심사 보고서 작성 (담당자: 박예산 과장, 기한: 6/10)`,
+- 여신심사 AI 초안 생성 파일럿 기획서 작성 (담당자: 박시스 과장, 기한: 6/27)
+- 타행 AI 활용 사례 심화 분석 보고서 제출 (담당자: 이데이 대리, 기한: 6/30)`,
   minutesFeedback: '', // 사용자가 입력할 수정 피드백
   minutesFinal: '', // 최종 완성된 회의록
   
@@ -83,20 +83,20 @@ const AGENT_MESSAGES = {
     ]
   },
   2: {
-    init: "호스트님의 입력 사항을 확인했습니다!\n\n**[회의 기획안 접수]**\n• 회의명: Q3 마케팅 전략 및 예산 조율 회의\n• 회의 안건: 브랜드 인지도 제고 및 예산 조정 타당성 검토\n• 첨부 자료: Q3_Marketing_Draft_v1.1.pdf\n\n호스트님의 향후 캘린더 일정을 분석한 결과, 아래 일자들이 회의 개설이 가능합니다. **선호하시는 일자와 시간대**를 선택해 주세요.",
+    init: "호스트님의 입력 사항을 확인했습니다!\n\n**[회의 기획안 접수]**\n• 회의명: 생성형 AI 플랫폼 활용도 제고 방안\n• 회의 안건: 생성형 AI 플랫폼을 활용하여 업무를 효율화 할 수 있는 아이디어 회의\n• 첨부 자료: AI_타행활용사례.pdf\n\n호스트님의 향후 캘린더 일정을 분석한 결과, 아래 일자들이 회의 개설이 가능합니다. **선호하시는 일자와 시간대**를 선택해 주세요.",
     actions: [
-      { text: "추천 1순위: 5월 29일(금) 14:00 ~ 15:30 선택", action: "select_time_1" },
+      { text: "추천 1순위: 6월 20일(토) 14:00 ~ 15:30 선택", action: "select_time_1" },
       { text: "추천 2순위: 6월 1일(월) 10:00 ~ 11:30 선택", action: "select_time_2" }
     ]
   },
   3: {
-    init: "선택하신 일시로 스케줄링을 시작합니다.\n• **선택 일시**: 2026년 5월 29일(금) 14:00 ~ 15:30\n\n회의 안건의 주요 키워드(**마케팅, 브랜드, 예산**)를 기반으로 **인사 시스템의 업무 분장표와 직원 검색**을 실행하여 회의 참석이 필요한 사내 임직원 후보군을 분석했습니다.\n\n우측 '인사시스템' 탭에 매칭된 참석자 리스트를 띄워드렸습니다. 역할을 검토하시어 **필수 참가자, 선택 참가자, 제외자**를 확정해 주시기 바랍니다.",
+    init: "선택하신 일시로 스케줄링을 시작합니다.\n• **선택 일시**: 2026년 6월 20일(토) 14:00 ~ 15:30\n\n회의 안건의 주요 키워드(**AI, 플랫폼, 업무효율화**)를 기반으로 **인사 시스템의 업무 분장표와 직원 검색**을 실행하여 회의 참석이 필요한 사내 임직원 후보군을 분석했습니다.\n\n우측 '인사시스템' 탭에 매칭된 참석자 리스트를 띄워드렸습니다. 역할을 검토하시어 **필수 참가자, 선택 참가자, 제외자**를 확정해 주시기 바랍니다.",
     actions: [
       { text: "추천된 참석 대상자 그대로 확정하기", next: 4, action: "confirm_members" }
     ]
   },
   4: {
-    init: "참석자 역할 지정을 확인했습니다. 이제 **필수 참가자(김마케, 이디자, 박예산)의 일정표**를 스캔하여 지정하신 시간에 일정 충돌이 발생하는지 확인하겠습니다.",
+    init: "참석자 역할 지정을 확인했습니다. 이제 **필수 참가자의 일정표**를 스캔하여 지정하신 시간에 일정 충돌이 발생하는지 확인하겠습니다.",
     actions: [
       { text: "필수 참석자 캘린더 스캔 시작", action: "scan_calendars" }
     ],
@@ -107,7 +107,7 @@ const AGENT_MESSAGES = {
     ]
   },
   5: {
-    init: "최종 개최 일시가 확정되었습니다!\n• **최종 일시**: 2026년 5월 29일(금) 16:00 ~ 17:30 (충돌 없음)\n\n대면 회의인 경우 회의실 예약이 필요합니다. **자원 예약 에이전트**를 호출하여 참석자 규모(4인)를 완벽히 수용하고 해당 시간에 예약 가능한 회의실을 검색하겠습니다.\n\n*(비대면 화상회의인 경우 Teams 회의 링크가 자동 생성됩니다.)*",
+    init: "최종 개최 일시가 확정되었습니다!\n• **최종 일시**: 2026년 6월 20일(토) 16:00 ~ 17:30 (충돌 없음)\n\n대면 회의인 경우 회의실 예약이 필요합니다. **자원 예약 에이전트**를 호출하여 참석자 규모(4인)를 완벽히 수용하고 해당 시간에 예약 가능한 회의실을 검색하겠습니다.\n\n*(비대면 화상회의인 경우 Teams 회의 링크가 자동 생성됩니다.)*",
     actions: [
       { text: "대면 회의실 자동 예약 실행", action: "book_offline" },
       { text: "비대면 Teams 화상 회의로 전환", action: "toggle_online" }
@@ -241,7 +241,7 @@ function handleStepTransitions(step) {
     SmartSuggestionBox.classList.remove('hidden');
     document.getElementById('suggestion-reason-text').textContent = "호스트 캘린더 여유 일자";
     SmartSuggestionList.innerHTML = `
-      <button class="suggest-btn" data-time="5/29 14:00">5월 29일(금) 14:00~15:30</button>
+      <button class="suggest-btn" data-time="6/20 14:00">6월 20일(토) 14:00~15:30</button>
       <button class="suggest-btn" data-time="6/1 10:00">6월 1일(월) 10:00~11:30</button>
     `;
     
@@ -249,7 +249,7 @@ function handleStepTransitions(step) {
     SmartSuggestionList.querySelectorAll('.suggest-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const timeVal = e.target.getAttribute('data-time');
-        if (timeVal.includes('5/29')) {
+        if (timeVal.includes('6/20')) {
           handleAction('select_time_1');
         } else {
           handleAction('select_time_2');
@@ -338,10 +338,10 @@ async function handleAction(actionName) {
       break;
       
     case "select_time_1":
-      appState.selectedDate = '2026-05-29';
+      appState.selectedDate = '2026-06-20';
       appState.selectedTimeStart = '14:00';
       appState.selectedTimeEnd = '15:30';
-      showToast("회의 일정이 5월 29일 14:00로 가설정되었습니다.", "success");
+      showToast("회의 일정이 6월 20일 14:00로 가설정되었습니다.", "success");
       await runStep(3);
       break;
       
@@ -843,7 +843,7 @@ function simulateTelegramRSVP() {
   TgHistory.innerHTML = '';
   showToast("텔레그램 알림 에이전트 가동: 참석 현황 조사를 진행합니다.", "info");
   
-  addTelegramMessage('out', "📢 **[RSVP 조사]** 5/29(금) 16:00 개최되는 **'Q3 마케팅 전략 및 예산 조율 회의'**의 참석 여부를 확인해 주십시오.\n\n• 장소: 크리에이티브룸\n• 안건: 브랜드 인지도 및 플랫폼 광고 예산 타당성 검토\n\n아래 버튼을 눌러 회신해 주시기 바랍니다.");
+  addTelegramMessage('out', "📢 **[RSVP 조사]** 6/20(토) 16:00 개최되는 **'생성형 AI 플랫폼 활용도 제고 방안'** 회의의 참석 여부를 확인해 주십시오.\n\n• 장소: 크리에이티브룸\n• 안건: 생성형 AI 플랫폼을 활용하여 업무를 효율화 할 수 있는 아이디어 회의\n\n아래 버튼을 눌러 회신해 주시기 바랍니다.");
   
   // 임직원들 자동 회신 시뮬레이션 연출
   const activeParticipants = EMPLOYEES.filter(emp => emp.id !== 'emp_host' && (appState.participants[emp.id] === 'required' || appState.participants[emp.id] === 'optional'));
@@ -1105,7 +1105,7 @@ function sendMeetingEmails() {
 
 [회의 확정 안내 정보]
 • 회의명: ${appState.meetingName}
-• 회의 일시: 2026년 5월 29일 (금) 16:00 ~ 17:30
+• 회의 일시: 2026년 6월 20일 (토) 16:00 ~ 17:30
 • 개최 장소: ${roomName}
 ${appState.onlineLink ? `• Teams 링크: ${appState.onlineLink}\n` : ''}
 [회의 개요 및 안건]
@@ -1189,11 +1189,11 @@ function startLiveTranscriptionSimulation() {
 
   const transTextNode = document.getElementById('trans-text');
   const scripts = [
-    "[김경남 과장] 반갑습니다. Q3 브랜드 전략과 마케팅 예산 타당성 조정 회의를 시작하겠습니다. 먼저 마케팅팀 김마케 팀장님 의견 주시죠.",
-    "[김마케 팀장] 네, 플랫폼 신규 광고 집행을 위해 약 15% 정도의 마케팅 광고 예산 증액이 불가피한 실정입니다. 퍼포먼스 마케팅 효율이 아주 좋습니다.",
-    "[박예산 과장] 기획예산팀 입장에서는 전체 예산 한도가 제한되어 있어 마케팅팀의 광고 기획안과 상세 산출 견적이 좀 더 확실히 증명되어야 합니다.",
-    "[이디자 대리] 광고 크리에이티브 시안 및 브랜드 BI를 리뉴얼하는 신규 시각 자료 작업도 병행하고 있어서, 광고 효율은 훨씬 증폭될 것입니다.",
-    "[김경남 과장] 좋습니다. 그럼 김 팀장님이 상세 기획서를 보완하고, 이 대리님이 6월 초까지 광고 시안을 확정해 주시면 예산 타당성을 최종 승인하는 방향으로 가시죠."
+    "[김경남 과장] 안녕하세요, 생성형 AI 플랫폼 활용도 제고 방안 회의를 시작하겠습니다. 오늘은 각 부서에서 AI로 업무를 효율화할 수 있는 아이디어를 자유롭게 공유해 주시면 됩니다.",
+    "[이데이 대리] 저는 여신심사 업무에서 AI를 활용할 수 있을 것 같습니다. 타행 사례를 보면 대출 신청서 초안 자동 생성으로 심사 처리 시간이 약 40% 단축된 사례가 있었습니다.",
+    "[박시스 과장] 고객 센터 상담 로그를 AI가 분석해 자주 묻는 질문 답변을 자동 생성하면 상담원 응대 품질도 올라가고 대기 시간도 줄일 수 있을 것입니다. — 🌐 **[외국어 감지: 영어]** 'Using AI-driven FAQ automation, Mizuho Bank reduced call center handling time by 35% in Q1 2025.' — 🔄 **[AI 자동 번역]** '미즈호 은행은 AI 기반 FAQ 자동화를 통해 2025년 1분기 콜센터 처리 시간을 35% 단축했습니다.'",
+    "[최혁신 선임] AI 문서 자동화는 좋지만, 생성된 내용에 대한 최종 책임은 담당자가 반드시 검토해야 한다고 생각합니다. 오류나 편향이 발생할 수 있기 때문에 내규 보완이 선행되어야 합니다.",
+    "[김경남 과장] 모두 좋은 의견 감사합니다. 박 과장님이 여신심사 파일럿 기획서를, 이 대리님이 타행 사례 분석 보고서를 이달 말까지 제출해 주시면 다음 단계를 논의하겠습니다."
   ];
 
   let idx = 0;
@@ -1278,7 +1278,7 @@ function executeCancellationFlow() {
   addChatMessage('agent', `🚨 **[비상 공지 - 회의 취소 전파]**\n호스트님이 회의를 취소하셨습니다.\n\n• **취소 사유**: ${appState.cancelReason}\n\n전체 참가자에게 즉각 이메일 및 메신저(텔레그램)로 취소 전파 처리를 수행하였으며 모든 임직원 캘린더 일정에 취소선이 적용되었습니다.`);
   
   // 텔레그램 메신저 전파
-  addTelegramMessage('out', `⚠️ **[긴급 회의 취소 알림]**\n5/29(금) 16:00 개최 예정이던 **'Q3 마케팅 전략 및 예산 조율 회의'**가 호스트 긴급 요청으로 인해 공식 취소되었습니다.\n\n• 취소 사유: ${appState.cancelReason}\n\n일정에 참고하시기 바라며 캘린더를 확인해 주세요.`);
+  addTelegramMessage('out', `⚠️ **[긴급 회의 취소 알림]**\n6/20(토) 16:00 개최 예정이던 **'생성형 AI 플랫폼 활용도 제고 방안'** 회의가 호스트 긴급 요청으로 인해 공식 취소되었습니다.\n\n• 취소 사유: ${appState.cancelReason}\n\n일정에 참고하시기 바라며 캘린더를 확인해 주세요.`);
   
   // 취소 이메일 전송
   const recipients = EMPLOYEES.filter(emp => emp.id !== 'emp_host' && (appState.participants[emp.id] === 'required' || appState.participants[emp.id] === 'optional'))
@@ -1291,7 +1291,7 @@ function executeCancellationFlow() {
 
 [취소된 회의 정보]
 • 회의명: ${appState.meetingName}
-• 원래 일시: 2026년 5월 29일 (금) 16:00 ~ 17:30
+• 원래 일시: 2026년 6월 20일 (토) 16:00 ~ 17:30
 • 취소 사유: ${appState.cancelReason}
 
 참석자 여러분의 아웃룩 및 구글 캘린더 일정표의 해당 항목은 취소선([취소])으로 그어져 일시가 취소되었음을 명확히 표기하도록 연동 완료하였습니다.
