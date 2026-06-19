@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 회의 조율 에이전트 — 발표자료</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --accent2: #3fb950;
+      --accent3: #f78166;
+      --accent4: #d2a8ff;
+      --accent5: #ffa657;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --glass: rgba(22, 27, 34, 0.85);
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── NAV ── */
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .nav-title { font-size: 13px; color: var(--muted); }
+    .nav-controls { display: flex; align-items: center; gap: 12px; }
+    .nav-controls button {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all .2s;
+    }
+    .nav-controls button:hover { background: var(--border); }
+    .nav-controls button:disabled { opacity: .3; cursor: default; }
+    .slide-counter { font-size: 13px; color: var(--muted); min-width: 60px; text-align: center; }
+
+    /* ── SLIDE CONTAINER ── */
+    .slide-wrap {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 60px;
+      animation: fadeIn .35s ease;
+    }
+    .slide.active { display: flex; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── PROGRESS BAR ── */
+    .progress {
+      height: 3px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent4));
+      transition: width .4s ease;
+    }
+
+    /* ── SLIDE CONTENT UTILITIES ── */
+    .slide-inner {
+      max-width: 960px;
+      width: 100%;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .tag-blue  { background: rgba(88,166,255,.15); color: var(--accent); border: 1px solid rgba(88,166,255,.3); }
+    .tag-green { background: rgba(63,185,80,.15);  color: var(--accent2); border: 1px solid rgba(63,185,80,.3); }
+    .tag-red   { background: rgba(247,129,102,.15); color: var(--accent3); border: 1px solid rgba(247,129,102,.3); }
+    .tag-purple { background: rgba(210,168,255,.15); color: var(--accent4); border: 1px solid rgba(210,168,255,.3); }
+    .tag-orange { background: rgba(255,166,87,.15); color: var(--accent5); border: 1px solid rgba(255,166,87,.3); }
+
+    h1 { font-size: 48px; font-weight: 700; line-height: 1.2; }
+    h2 { font-size: 36px; font-weight: 700; line-height: 1.3; }
+    h3 { font-size: 22px; font-weight: 600; }
+    p  { font-size: 17px; line-height: 1.7; color: var(--muted); }
+    .lead { font-size: 20px; color: var(--text); }
+
+    .hl { color: var(--accent); }
+    .hl2 { color: var(--accent2); }
+    .hl3 { color: var(--accent3); }
+    .hl4 { color: var(--accent4); }
+    .hl5 { color: var(--accent5); }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+    }
+    .card-grid {
+      display: grid;
+      gap: 16px;
+    }
+    .card-grid-2 { grid-template-columns: 1fr 1fr; }
+    .card-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .card-grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+    .card .icon { font-size: 28px; margin-bottom: 10px; }
+    .card .card-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+    .card .card-body { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    /* Step list */
+    .step-list { display: flex; flex-direction: column; gap: 10px; }
+    .step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    .step-num {
+      flex-shrink: 0;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: rgba(88,166,255,.15);
+      border: 1px solid rgba(88,166,255,.3);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .step-text { font-size: 14px; line-height: 1.5; }
+    .step-text strong { color: var(--text); }
+    .step-text span { color: var(--muted); }
+
+    /* Flow arrow */
+    .flow-wrap { display: flex; align-items: center; gap: 0; flex-wrap: wrap; }
+    .flow-box {
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      text-align: center;
+      min-width: 90px;
+    }
+    .flow-arrow { color: var(--muted); font-size: 18px; margin: 0 4px; }
+
+    /* Agent badge */
+    .agent-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 6px;
+      font-size: 12px; font-weight: 600;
+    }
+    .agent-coordinator { background: rgba(88,166,255,.15); color: var(--accent); border: 1px solid rgba(88,166,255,.25); }
+    .agent-resource    { background: rgba(63,185,80,.15); color: var(--accent2); border: 1px solid rgba(63,185,80,.25); }
+    .agent-rsvp        { background: rgba(247,129,102,.15); color: var(--accent3); border: 1px solid rgba(247,129,102,.25); }
+    .agent-scribe      { background: rgba(210,168,255,.15); color: var(--accent4); border: 1px solid rgba(210,168,255,.25); }
+
+    /* Divider */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+
+    /* Cover slide special */
+    .cover-wrap { text-align: center; }
+    .cover-wrap h1 { font-size: 52px; margin-bottom: 16px; }
+    .cover-wrap .sub { font-size: 20px; color: var(--muted); margin-bottom: 32px; }
+    .cover-badge-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+    /* Problem slide */
+    .pain-list { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+    .pain-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 18px;
+      background: rgba(247,129,102,.07);
+      border: 1px solid rgba(247,129,102,.2);
+      border-radius: 10px;
+      font-size: 15px;
+    }
+    .pain-icon { font-size: 22px; }
+
+    /* Comparison table */
+    .compare-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .compare-table th, .compare-table td {
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      font-size: 14px;
+      text-align: left;
+    }
+    .compare-table th { background: var(--surface); font-weight: 600; color: var(--muted); font-size: 12px; letter-spacing: .5px; }
+    .compare-table tr:nth-child(odd) td { background: rgba(255,255,255,.02); }
+    .bad  { color: var(--accent3); }
+    .good { color: var(--accent2); }
+
+    /* KPI */
+    .kpi-row { display: flex; gap: 16px; }
+    .kpi-box {
+      flex: 1;
+      text-align: center;
+      padding: 24px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .kpi-num { font-size: 40px; font-weight: 700; }
+    .kpi-label { font-size: 13px; color: var(--muted); margin-top: 6px; }
+
+    /* Two-col layout */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+
+    .mt-s { margin-top: 8px; }
+    .mt-m { margin-top: 16px; }
+    .mt-l { margin-top: 24px; }
+
+    .bullet-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+    .bullet-item { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--muted); }
+    .bullet-item .dot { flex-shrink: 0; color: var(--accent); margin-top: 2px; }
+
+    /* Keyboard hint */
+    .hint { text-align: center; font-size: 12px; color: var(--muted); padding: 6px 0; flex-shrink: 0; }
+    kbd {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<div class="nav">
+  <span class="nav-title">AI 회의 조율 에이전트 시뮬레이터 — 발표자료</span>
+  <div class="nav-controls">
+    <button id="btn-prev">← 이전</button>
+    <span class="slide-counter" id="counter">1 / 12</span>
+    <button id="btn-next">다음 →</button>
+  </div>
+</div>
+
+<!-- Progress -->
+<div class="progress"><div class="progress-fill" id="progress"></div></div>
+
+<!-- Slides -->
+<div class="slide-wrap">
+
+  <!-- ────── SLIDE 1: COVER ────── -->
+  <div class="slide active" id="s1">
+    <div class="slide-inner cover-wrap">
+      <div class="tag tag-blue">경남은행 디지털전략부</div>
+      <h1>🤖 AI 회의 조율<br><span class="hl">에이전트</span> 시뮬레이터</h1>
+      <p class="sub mt-m">AI가 회의의 처음부터 끝까지 자동으로 조율해준다면?<br>그 모든 과정을 직접 체험해보는 인터랙티브 데모</p>
+      <div class="cover-badge-row mt-l">
+        <span class="tag tag-blue">회의 조율 자동화</span>
+        <span class="tag tag-green">자원 예약 연동</span>
+        <span class="tag tag-purple">AI 회의록 생성</span>
+        <span class="tag tag-orange">참석 관리</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────── SLIDE 2: PROBLEM ────── -->
+  <div class="slide" id="s2">
+    <div class="slide-inner">
+      <div class="tag tag-red">문제 인식</div>
+      <h2>회의 하나 잡는데 <span class="hl3">왜 이렇게 힘들까요?</span></h2>
+      <div class="pain-list mt-l">
+        <div class="pain-item"><span class="pain-icon">📅</span><span>참석자 5명의 일정을 일일이 물어보고 취합하는 데 <strong>하루가 걸린다</strong></span></div>
+        <div class="pain-item"><span class="pain-icon">🏢</span><span>회의실이 이중 예약되거나, 예약했던 걸 <strong>깜빡 잊고 회의 당일에 당황</strong></span></div>
+        <div class="pain-item"><span class="pain-icon">📨</span><span>회의 취소·변경 시 일일이 전화·메신저로 연락 → <strong>한 명이라도 빠뜨리면 큰일</strong></span></div>
+        <div class="pain-item"><span class="pain-icon">📝</span><span>회의가 끝나도 <strong>회의록 작성은 또 다른 업무</strong> — 누가 쓰나요?</span></div>
+        <div class="pain-item"><span class="pain-icon">🔍</span><span>"이 안건에 누가 참석해야 하지?" — <strong>업무분장표 뒤지기만 30분</strong></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────── SLIDE 3: SOLUTION ────── -->
+  <div class="slide" id="s3">
+    <div class="slide-inner">
+      <div class="tag tag-blue">솔루션</div>
+      <h2><span class="hl">AI 에이전트</span>가 이 모든 것을<br>대신 해준다면?</h2>
+      <div class="card-grid card-grid-2 mt-l">
+        <div class="card">
+          <div class="icon">🎯</div>
+          <div class="card-title">이 서비스는 무엇인가요?</div>
+          <div class="card-body">
+            AI가 회의 안건 입력부터 참석자 추천, 일정 조율, 회의실 예약, 사전 알림, 회의록 작성까지
+            <strong style="color:var(--text)"> 10단계 전 과정</strong>을 자동으로 처리해주는 스마트 보조 에이전트입니다.
+          </div>
+        </div>
+        <div class="card">
+          <div class="icon">🖥️</div>
+          <div class="card-title">이 데모는 무엇인가요?</div>
+          <div class="card-body">
+            실제 AI 에이전트가 어떻게 생각하고, 어떤 도구를 사용하고, 어떤 결정을 내리는지
+            <strong style="color:var(--text)">눈으로 보고 직접 체험</strong>할 수 있는 웹 시뮬레이터입니다.
+          </div>
+        </div>
+      </div>
+      <div class="card mt-m" style="border-color: rgba(88,166,255,.3);">
+        <div style="font-size: 15px;">
+          💡 <strong>핵심 아이디어:</strong>
+          <span style="color:var(--muted)"> 사람이 직접 하던 회의 관련 반복 업무를 AI 에이전트에게 위임하여, 실무자는 본질적인 업무에만 집중할 수 있습니다.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────── SLIDE 4: 4 AGENTS ────── -->
+  <div class="slide" id="s4">
+    <div class="slide-inner">
+      <div class="tag tag-purple">AI 에이전트 구성</div>
+      <h2>4개의 <span class="hl4">AI 에이전트</span>가 역할을 나눠<br>팀처럼 협력합니다</h2>
+      <div class="card-grid card-grid-2 mt-l">
+        <div class="card" style="border-color: rgba(88,166,255,.25);">
+          <div class="icon">🧠</div>
+          <div class="card-title"><span class="hl">회의 조율 에이전트</span> (총괄)</div>
+          <div class="card-body">안건 분석, 참석자 추천, 일정 충돌 감지, 스마트 재조율을 담당하는 중심 에이전트. 나머지 에이전트들에게 업무를 지시합니다.</div>
+        </div>
+        <div class="card" style="border-color: rgba(63,185,80,.25);">
+          <div class="icon">🏢</div>
+          <div class="card-title"><span class="hl2">자원 예약 에이전트</span></div>
+          <div class="card-body">회의 규모에 맞는 회의실을 자동으로 탐색·예약하거나, 비대면 시 Teams 화상 링크를 생성합니다.</div>
+        </div>
+        <div class="card" style="border-color: rgba(247,129,102,.25);">
+          <div class="icon">📲</div>
+          <div class="card-title"><span class="hl3">RSVP 관리 에이전트</span></div>
+          <div class="card-body">회의 24시간 전 텔레그램으로 참석 여부를 자동 조사하고, 취소·변경 시 즉시 전체 참가자에게 전파합니다.</div>
+        </div>
+        <div class="card" style="border-color: rgba(210,168,255,.25);">
+          <div class="icon">✍️</div>
+          <div class="card-title"><span class="hl4">회의록 작성 에이전트</span></div>
+          <div class="card-body">회의 중 실시간 음성을 자동 속기하고, 종료 후 요약·결정사항·Action Item이 포함된 회의록 초안을 즉시 생성합니다.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────── SLIDE 5: 10-STEP OVERVIEW ────── -->
+  <div class="slide" id="s5">
+    <div class="slide-inner">
+      <div class="tag tag-green">10단계 프로세스</div>
+      <h2>회의의 처음부터 끝까지<br><span class="hl2">AI가 자동으로 처리</span>하는 흐름</h2>
+      <div class="flow-wrap mt-l" style="gap: 6px;">
+        <div class="flow-box" style="border-color:rgba(88,166,255,.4); color:var(--accent);">①<br>안건 입력</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-box">②<br>일정 분석</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-box">③<br>시간 선택</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-box">④<br>참석자 추천</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-box">⑤<br>충돌 감지</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-box" style="border-color:rgba(63,185,80,.4); color:var(--accent2);">⑥<br>재조율</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-box">⑦<br>자원 예약</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-box">⑧<br>알림 발송</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-box">⑨<br>참석 조사</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-box" style="border-color:rgba(210,168,255,.4); color:var(--accent4);">⑩<br>회의록 완성</div>
+      </div>
+      <div class="card mt-m" style="border-color: rgba(63,185,80,.25);">
+        <p style="font-size:14px; color:var(--muted);">
+          📌 <strong style="color:var(--text)">사람이 하는 일:</strong> 회의 안건을 AI에게 말해주는 것, 그리고 최종 선택을 확인하는 것.<br>
+          나머지 모든 단계는 AI 에이전트가 알아서 처리합니다.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────── SLIDE 6: STEPS 1-5 ────── -->
+  <div class="slide" id="s6">
+    <div class="slide-inner">
+      <div class="tag tag-blue">단계별 설명 (1~5단계)</div>
+      <h2>안건 입력부터 <span class="hl">참석자 확정</span>까지</h2>
+      <div class="step-list mt-l">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-text"><strong>회의 안건 입력</strong> <span>— "Q3 마케팅 전략 수립 회의, 브랜드 인지도 제고 및 광고 예산 수립" 입력</span></div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-text"><strong>호스트 캘린더 자동 분석</strong> <span>— AI가 내 일정을 보고 비어있는 날짜 3개를 추천 카드로 제시</span></div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-text"><strong>시간대 선택</strong> <span>— 제안된 날짜 중 하나를 클릭하고 선호 시간을 드래그로 설정</span></div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-text"><strong>AI 참석자 자동 추천</strong> <span>— "마케팅·브랜드·예산" 키워드로 인사 DB 검색 → 관련 담당자 자동 매칭</span></div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">5</div>
+          <div class="step-text"><strong>일정 충돌 감지</strong> <span>— 필수 참가자들의 캘린더를 실시간 스캔하여 겹치는 일정을 빨간색으로 표시</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────── SLIDE 7: STEPS 6-10 ────── -->
+  <div class="slide" id="s7">
+    <div class="slide-inner">
+      <div class="tag tag-green">단계별 설명 (6~10단계)</div>
+      <h2>자원 예약부터 <span class="hl2">회의록 배포</span>까지</h2>
+      <div class="step-list mt-l">
+        <div class="step-item">
+          <div class="step-num">6</div>
+          <div class="step-text"><strong>일정 스마트 재조율</strong> <span>— 충돌 시 전원이 비어있는 최적 시간대를 AI가 자동으로 재탐색·제안</span></div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">7</div>
+          <div class="step-text"><strong>자원 자동 예약</strong> <span>— 대면이면 수용 인원에 맞는 회의실 자동 예약, 비대면이면 Teams 링크 즉시 생성</span></div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">8</div>
+          <div class="step-text"><strong>일정 등록 & 알림 발송</strong> <span>— 전 참가자 캘린더에 자동 등록, 이메일·메신저로 안내 발송</span></div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">9</div>
+          <div class="step-text"><strong>D-24h 참석 조사</strong> <span>— 텔레그램으로 참석 여부 자동 설문, 취소 시 전원에게 즉시 비상 전파 + 캘린더 취소선</span></div>
+        </div>
+        <div class="step-item">
+          <div class="step-num" style="background:rgba(210,168,255,.15);border-color:rgba(210,168,255,.3);color:var(--accent4);">10</div>
+          <div class="step-text"><strong>회의 진행 & AI 회의록</strong> <span>— 실시간 음성 속기 → 종료 후 요약·결정사항·Action Item 자동 생성 → 피드백 반영 → 전원 공유</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────── SLIDE 8: DEMO FEATURES ────── -->
+  <div class="slide" id="s8">
+    <div class="slide-inner">
+      <div class="tag tag-orange">데모 체험 포인트</div>
+      <h2>시뮬레이터에서 <span class="hl5">직접 눈으로</span> 볼 수 있는 것들</h2>
+      <div class="card-grid card-grid-2 mt-l">
+        <div class="card">
+          <div class="icon">🗓️</div>
+          <div class="card-title">실시간 캘린더 시각화</div>
+          <div class="card-body">호스트와 참석자들의 일정이 겹치는 구간을 빨간색, 여유 시간을 파란색으로 구분해 한눈에 표시</div>
+        </div>
+        <div class="card">
+          <div class="icon">🤖</div>
+          <div class="card-title">AI 사고 과정 투명 공개</div>
+          <div class="card-body">AI가 "지금 무슨 생각을 하고 있는지", "어떤 도구를 호출했는지", "결과는 무엇인지"를 로그로 실시간 확인</div>
+        </div>
+        <div class="card">
+          <div class="icon">📬</div>
+          <div class="card-title">가상 이메일 & 메신저</div>
+          <div class="card-body">이메일 발송 애니메이션, 텔레그램 알림 팝업이 실제처럼 동작하는 모의 커뮤니케이션 피드</div>
+        </div>
+        <div class="card">
+          <div class="icon">🎙️</div>
+          <div class="card-title">실시간 음성 속기 시뮬레이션</div>
+          <div class="card-body">회의 진행 중 텍스트가 실시간으로 스크롤되고, 종료 버튼 클릭 즉시 AI 회의록이 자동 생성</div>
+        </div>
+      </div>
+      <div class="card mt-m">
+        <div style="font-size: 14px; color: var(--muted);">
+          🎨 <strong style="color: var(--text)">디자인:</strong> 다크 테마 + 글라스모피즘 효과 + 부드러운 애니메이션으로 프리미엄 UI 구현
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────── SLIDE 9: BEFORE/AFTER ────── -->
+  <div class="slide" id="s9">
+    <div class="slide-inner">
+      <div class="tag tag-green">도입 효과</div>
+      <h2>도입 전 vs 도입 후</h2>
+      <table class="compare-table mt-l">
+        <thead>
+          <tr>
+            <th>항목</th>
+            <th class="bad">🔴 현재 (수동)</th>
+            <th class="good">🟢 AI 에이전트 도입 후</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>참석자 일정 파악</td>
+            <td class="bad">메신저·이메일로 개별 문의 (1~2일)</td>
+            <td class="good">AI가 실시간 스캔 (수초)</td>
+          </tr>
+          <tr>
+            <td>참석자 추천</td>
+            <td class="bad">업무분장표 직접 검색 (30분+)</td>
+            <td class="good">안건 키워드로 자동 매칭 (즉시)</td>
+          </tr>
+          <tr>
+            <td>회의실 예약</td>
+            <td class="bad">예약 시스템 접속·수동 검색·예약</td>
+            <td class="good">인원 기준 자동 예약</td>
+          </tr>
+          <tr>
+            <td>취소·변경 전파</td>
+            <td class="bad">전화·메신저로 개별 연락 (누락 위험)</td>
+            <td class="good">이메일+메신저 동시 자동 전파</td>
+          </tr>
+          <tr>
+            <td>회의록 작성</td>
+            <td class="bad">회의 후 담당자가 직접 작성 (1~2시간)</td>
+            <td class="good">AI가 회의 중 자동 속기·요약 (즉시)</td>
+          </tr>
+          <tr>
+            <td>참석 확인</td>
+            <td class="bad">당일 출석 파악</td>
+            <td class="good">D-24h 자동 설문·결과 요약</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ────── SLIDE 10: KPI ────── -->
+  <div class="slide" id="s10">
+    <div class="slide-inner">
+      <div class="tag tag-blue">기대 효과 요약</div>
+      <h2>회의 행정 업무에서 <span class="hl">실무 업무</span>로<br>시간을 되돌려 드립니다</h2>
+      <div class="kpi-row mt-l">
+        <div class="kpi-box">
+          <div class="kpi-num hl">90<span style="font-size:24px">%</span></div>
+          <div class="kpi-label">회의 준비 업무<br>시간 절감</div>
+        </div>
+        <div class="kpi-box">
+          <div class="kpi-num hl2">0</div>
+          <div class="kpi-label">취소·변경 알림<br>누락 건수</div>
+        </div>
+        <div class="kpi-box">
+          <div class="kpi-num hl4">즉시</div>
+          <div class="kpi-label">회의 종료 후<br>회의록 생성</div>
+        </div>
+        <div class="kpi-box">
+          <div class="kpi-num hl5">100<span style="font-size:24px">%</span></div>
+          <div class="kpi-label">회의 관련 커뮤니케이션<br>자동화율</div>
+        </div>
+      </div>
+      <div class="card mt-m" style="border-color: rgba(88,166,255,.25);">
+        <p style="font-size:15px;">
+          🚀 <strong>이 데모가 보여주는 것:</strong>
+          <span style="color:var(--muted)"> AI 에이전트 기술은 이미 업무 현장에 적용 가능한 수준입니다. 복잡한 비즈니스 로직도 AI에게 위임할 수 있습니다.</span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────── SLIDE 11: TECH NOTE (simple) ────── -->
+  <div class="slide" id="s11">
+    <div class="slide-inner">
+      <div class="tag tag-purple">간단 기술 소개</div>
+      <h2>어떻게 만들어졌나요?<br><span style="font-size:28px; color: var(--muted);">(궁금하신 분들을 위한 한 장 요약)</span></h2>
+      <div class="two-col mt-l">
+        <div>
+          <div class="card">
+            <div class="icon">🧩</div>
+            <div class="card-title">ReAct 패턴</div>
+            <div class="card-body">
+              AI가 단순히 답을 내놓는 게 아니라<br>
+              <strong style="color:var(--text)">생각(THOUGHT) → 행동(ACTION) → 관찰(OBSERVATION)</strong><br>
+              의 순환 과정을 거쳐 복잡한 문제를 해결하는 AI 설계 방식
+            </div>
+          </div>
+          <div class="card mt-m">
+            <div class="icon">🔧</div>
+            <div class="card-title">에이전트 도구(Tools)</div>
+            <div class="card-body">
+              AI가 직접 실행할 수 있는 기능들 — 캘린더 조회, 회의실 예약, 이메일 발송 등
+              각 기능을 AI가 상황에 맞게 선택해 호출합니다.
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="icon">🤝</div>
+            <div class="card-title">멀티 에이전트 협업</div>
+            <div class="card-body">
+              하나의 AI가 모든 것을 하는 게 아니라, <strong style="color:var(--text)">전문 AI 4명이 역할을 나눠</strong> 각자 잘하는 일을 담당하고 서로 소통하는 구조
+            </div>
+          </div>
+          <div class="card mt-m">
+            <div class="icon">🌐</div>
+            <div class="card-title">웹 기반 시뮬레이터</div>
+            <div class="card-body">
+              별도 설치 없이 브라우저에서 바로 실행 가능.
+              실제 외부 서비스 연동 없이도 전 과정을 100% 체험할 수 있습니다.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ────── SLIDE 12: CLOSING ────── -->
+  <div class="slide" id="s12">
+    <div class="slide-inner cover-wrap">
+      <div class="tag tag-green">마무리</div>
+      <h1>직접 <span class="hl2">체험</span>해보세요!</h1>
+      <p class="sub mt-m">
+        AI가 회의를 어떻게 조율하는지,<br>
+        그 과정에서 어떤 '생각'을 하는지 시뮬레이터를 통해 직접 경험해보세요.
+      </p>
+      <div class="card mt-l" style="text-align:left; max-width: 540px; margin: 24px auto 0;">
+        <div class="card-title" style="margin-bottom: 12px;">💬 Q&A — 이런 것들이 궁금하시면 질문해 주세요</div>
+        <div class="bullet-list">
+          <div class="bullet-item"><span class="dot">→</span><span>실제 업무 시스템(전자결재, 사내 캘린더 등)과 연동이 가능한가요?</span></div>
+          <div class="bullet-item"><span class="dot">→</span><span>보안이나 개인정보 이슈는 없나요?</span></div>
+          <div class="bullet-item"><span class="dot">→</span><span>도입하려면 어떻게 시작하면 되나요?</span></div>
+          <div class="bullet-item"><span class="dot">→</span><span>회의 외에 다른 업무에도 적용할 수 있나요?</span></div>
+        </div>
+      </div>
+      <p style="margin-top: 32px; font-size: 14px;">감사합니다 🙏</p>
+    </div>
+  </div>
+
+</div><!-- /slide-wrap -->
+
+<!-- Keyboard hint -->
+<div class="hint">
+  <kbd>←</kbd> <kbd>→</kbd> 방향키로 슬라이드 이동 &nbsp;|&nbsp; <kbd>Space</kbd> 다음 슬라이드
+</div>
+
+<script>
+  const TOTAL = 12;
+  let current = 1;
+
+  function goto(n) {
+    document.getElementById('s' + current).classList.remove('active');
+    current = Math.max(1, Math.min(TOTAL, n));
+    document.getElementById('s' + current).classList.add('active');
+    document.getElementById('counter').textContent = current + ' / ' + TOTAL;
+    document.getElementById('progress').style.width = (current / TOTAL * 100) + '%';
+    document.getElementById('btn-prev').disabled = current === 1;
+    document.getElementById('btn-next').disabled = current === TOTAL;
+  }
+
+  document.getElementById('btn-prev').addEventListener('click', () => goto(current - 1));
+  document.getElementById('btn-next').addEventListener('click', () => goto(current + 1));
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); goto(current + 1); }
+    if (e.key === 'ArrowLeft')                    { e.preventDefault(); goto(current - 1); }
+  });
+
+  goto(1);
+</script>
+</body>
+</html>

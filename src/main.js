@@ -2,6 +2,8 @@ import './style.css';
 import { EMPLOYEES, BASE_SCHEDULES, MEETING_ROOMS } from './agent/tools.js';
 import { AgenticEngine } from './agent/engine.js';
 import { SCENARIOS } from './agent/scenarios.js';
+import { buildScoreMap } from './agent/recommend.js';
+import { loadParticipants, saveParticipants, onParticipantsChanged } from './agent/participantState.js';
 
 const agenticEngine = new AgenticEngine();
 
@@ -151,19 +153,42 @@ const ChatContainer = document.getElementById('chat-messages');
 const ActionContainer = document.getElementById('quick-actions-container');
 const CalColumnsGrid = document.getElementById('calendar-columns-grid');
 const CalDateLabel = document.getElementById('cal-date-label');
-const ResourceSection = document.getElementById('resource-section');
+
 const ResourceBody = document.getElementById('resource-body-content');
 const SmartSuggestionBox = document.getElementById('smart-suggestion-box');
 const SmartSuggestionList = document.getElementById('suggestion-times-list');
 const CalendarInfoText = document.getElementById('calendar-info-text');
 const OrgList = document.getElementById('org-list');
+const OrgSearchInput = document.getElementById('org-search-input');
 const TgHistory = document.getElementById('tg-history');
+
+// 인사 검색 상태 (추천 엔진 결과)
+let orgSearchState = { tokens: [], scoreMap: {} };
 const GmailListPane = document.getElementById('gmail-list-pane');
 const GmailViewPane = document.getElementById('gmail-view-pane');
 const MailCountBadge = document.getElementById('mail-count');
 
 // 시뮬레이터 구동 함수
 function init() {
+  // 검색 페이지에서 저장된 참석자 역할이 있으면 병합
+  const saved = loadParticipants();
+  if (saved) {
+    Object.entries(saved).forEach(([id, role]) => {
+      if (id in appState.participants) appState.participants[id] = role;
+    });
+  }
+
+  // 검색 페이지에서 역할 변경 시 실시간 반영
+  onParticipantsChanged(newRoles => {
+    if (appState.currentStep > 4) return; // 확정 후에는 무시
+    Object.entries(newRoles).forEach(([id, role]) => {
+      if (id in appState.participants) appState.participants[id] = role;
+    });
+    renderOrg();
+    renderCalendar();
+    showToast('직원검색 화면에서 참석자 역할이 변경되었습니다.', 'info');
+  });
+
   setupEventListeners();
   agenticEngine.onAgentActive = updateAgentNetwork;
   runStep(1);
@@ -230,20 +255,22 @@ function handleStepTransitions(step) {
       });
     });
   } else if (step === 3) {
-    // 인사 추천 강조
     CalendarInfoText.textContent = "선택 일자 스케줄러";
     showToast("AI가 안건 키워드 매칭 인원을 인사 DB에서 탐색했습니다.", "info");
-    
-    // 가상 검색창 검색 단어 활성화
-    const searchInput = document.getElementById('org-search-input');
-    searchInput.classList.add('pulse-input');
-    
-    // 매칭 인원들 활성화
+
+    // 추천 엔진으로 매칭 & 검색창 자동 채우기
+    runOrgSearch(`${appState.meetingName} ${appState.meetingAgenda}`);
+
+    // 상위 3명을 필수 참석자로 자동 지정
+    const top3 = Object.entries(orgSearchState.scoreMap)
+      .sort((a, b) => b[1].score - a[1].score)
+      .slice(0, 3)
+      .map(([id]) => id);
     EMPLOYEES.forEach(emp => {
-      if (['emp_marketing', 'emp_design', 'emp_budget'].includes(emp.id)) {
-        appState.participants[emp.id] = 'required';
-      }
+      if (emp.id === 'emp_host') return;
+      appState.participants[emp.id] = top3.includes(emp.id) ? 'required' : 'excluded';
     });
+    saveParticipants(appState.participants);
     renderOrg();
   } else if (step === 4) {
     CalendarInfoText.textContent = "참석 인원 전체 캘린더 스캔";
@@ -405,6 +432,7 @@ async function handleAction(actionName) {
       addChatMessage('agent', AGENT_MESSAGES[8].minutesReady);
       renderQuickActions(AGENT_MESSAGES[8].minutesActions);
       sendMinutesDraftEmails();
+      simulateSatisfactionSurvey();
       break;
       
     case "edit_minutes":
@@ -618,27 +646,60 @@ function createEventBlock(startTime, endTime, name, type) {
   return block;
 }
 
-// 인사시스템 렌더러 (업무 분장 검색 결과)
+// 인사시스템 렌더러 (추천 엔진 결과 반영)
 function renderOrg() {
   OrgList.innerHTML = '';
-  
-  EMPLOYEES.forEach(emp => {
+  const { scoreMap } = orgSearchState;
+  const hasSearch = Object.keys(scoreMap).length > 0;
+
+  // 호스트 → 매칭 점수 높은 순 → 나머지
+  const sorted = [...EMPLOYEES].sort((a, b) => {
+    if (a.id === 'emp_host') return -1;
+    if (b.id === 'emp_host') return 1;
+    return (scoreMap[b.id]?.score ?? 0) - (scoreMap[a.id]?.score ?? 0);
+  });
+
+  // 구분선: 매칭 그룹 / 비매칭 그룹
+  let separatorAdded = false;
+
+  sorted.forEach(emp => {
+    const isHost = emp.id === 'emp_host';
+    const match  = scoreMap[emp.id];
+    const role   = appState.participants[emp.id] || 'excluded';
+
+    // 비매칭 직원 구분선 (검색 결과 있을 때만)
+    if (hasSearch && !isHost && !match && !separatorAdded) {
+      separatorAdded = true;
+      const sep = document.createElement('div');
+      sep.className = 'org-separator';
+      sep.textContent = '── 기타 직원';
+      OrgList.appendChild(sep);
+    }
+
     const item = document.createElement('div');
-    const isMatched = ['emp_marketing', 'emp_design', 'emp_budget'].includes(emp.id);
-    item.className = `emp-item ${isMatched ? 'matched' : ''}`;
-    
-    const role = appState.participants[emp.id] || 'excluded';
-    
+    item.className = `emp-item${match ? ' matched' : ''}`;
+
+    const scoreBadge = match
+      ? `<span class="emp-score-badge">점수 ${match.score}</span>`
+      : '';
+    const matchedKeywords = match?.matched.length
+      ? `<div class="emp-match-keywords">${match.matched.map(k => `<span class="emp-kw">${k}</span>`).join('')}</div>`
+      : '';
+
     item.innerHTML = `
       <div class="emp-card-top">
         <div class="emp-name-dept">
           <span class="emp-name">${emp.name} ${emp.pos}</span>
           <span class="emp-dept">${emp.dept}</span>
         </div>
-        <span class="emp-role">${emp.id === 'emp_host' ? '호스트' : '참석 대상'}</span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          ${scoreBadge}
+          <span class="emp-role">${isHost ? '호스트' : '참석 대상'}</span>
+        </div>
       </div>
       <div class="emp-duty"><strong>담당업무:</strong> ${emp.duty}</div>
-      ${emp.id !== 'emp_host' ? `
+      ${matchedKeywords}
+      ${!isHost ? `
         <div class="emp-card-actions">
           <button class="emp-role-btn ${role === 'required' ? 'active-required' : ''}" data-role="required" data-id="${emp.id}">필수</button>
           <button class="emp-role-btn ${role === 'optional' ? 'active-optional' : ''}" data-role="optional" data-id="${emp.id}">선택</button>
@@ -646,28 +707,38 @@ function renderOrg() {
         </div>
       ` : ''}
     `;
-    
-    // 역할 선택 이벤트 연동
-    if (emp.id !== 'emp_host') {
+
+    if (!isHost) {
       item.querySelectorAll('.emp-role-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', e => {
           if (appState.currentStep > 4) {
             showToast("회의 일정이 완료된 후에는 참석자 변경이 불가능합니다.", "error");
             return;
           }
           const targetId = e.target.getAttribute('data-id');
           const nextRole = e.target.getAttribute('data-role');
-          
           appState.participants[targetId] = nextRole;
+          saveParticipants(appState.participants);
           renderOrg();
           renderCalendar();
-          showToast(`${emp.name}님이 ${nextRole === 'required' ? '필수 참가자' : (nextRole === 'optional' ? '선택 참가자' : '제외자')}로 재지정되었습니다.`, "info");
+          const label = nextRole === 'required' ? '필수 참가자' : nextRole === 'optional' ? '선택 참가자' : '제외자';
+          showToast(`${emp.name}님이 ${label}로 재지정되었습니다.`, "info");
         });
       });
     }
-    
+
     OrgList.appendChild(item);
   });
+}
+
+// 인사 검색 실행 (검색창 또는 시뮬레이션 step 3 에서 호출)
+function runOrgSearch(query) {
+  const text = query ?? OrgSearchInput.value.trim();
+  if (!text) return;
+
+  OrgSearchInput.value = text;
+  orgSearchState = buildScoreMap(EMPLOYEES, text);
+  renderOrg();
 }
 
 // 자원 예약 섹션 렌더러
@@ -798,11 +869,145 @@ function simulateTelegramRSVP() {
 }
 
 // ────────────────────────────────────────────────────────
+// 7-B. 회의 만족도 설문 시뮬레이터
+// ────────────────────────────────────────────────────────
+
+const SCORE_META = [
+  { emoji: '😡', label: '매우불만족' },
+  { emoji: '😞', label: '불만족' },
+  { emoji: '😐', label: '보통' },
+  { emoji: '😊', label: '만족' },
+  { emoji: '🤩', label: '매우만족' },
+];
+
+// 직원별 시뮬레이션 응답 데이터
+const SURVEY_RESPONSES = {
+  emp_marketing: { score: 4, comment: '안건별 토론 시간 배분이 적절했습니다. 다음 번엔 사전 자료를 좀 더 일찍 공유해 주시면 더 좋을 것 같습니다.' },
+  emp_design:    { score: 5, comment: 'AI 회의록 자동 생성 덕분에 내용 정리에 따로 시간을 쓰지 않아도 돼서 집중할 수 있었습니다! 앞으로도 이 방식을 유지해 주세요 😊' },
+  emp_budget:    { score: 3, comment: '예산 검토 안건이 충분히 논의되지 못한 점이 조금 아쉬웠습니다. 다음 회의 전에 숫자 자료를 미리 배포해 주시면 감사하겠습니다.' },
+  default:       { score: 4, comment: '전반적으로 효율적인 회의였습니다. 안건이 명확하게 정리되어 좋았습니다.' },
+};
+
+function addTelegramRawCard(html) {
+  const wrap = document.createElement('div');
+  wrap.className = 'tg-msg out';
+  wrap.style.maxWidth = '90%';
+  wrap.style.padding = '10px 12px';
+  wrap.innerHTML = html;
+  TgHistory.appendChild(wrap);
+  TgHistory.scrollTop = TgHistory.scrollHeight;
+}
+
+function renderScoreRow() {
+  return SCORE_META.map((m, i) => `
+    <div class="tg-score-btn">
+      <span class="tg-score-emoji">${m.emoji}</span>
+      <span class="tg-score-num">${i + 1}</span>
+      <span class="tg-score-label">${m.label}</span>
+    </div>`).join('');
+}
+
+function renderStars(avg) {
+  const full  = Math.floor(avg);
+  const half  = avg - full >= 0.5 ? 1 : 0;
+  const empty = 5 - full - half;
+  return '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(empty);
+}
+
+function simulateSatisfactionSurvey() {
+  const participants = EMPLOYEES.filter(emp =>
+    emp.id !== 'emp_host' &&
+    (appState.participants[emp.id] === 'required' || appState.participants[emp.id] === 'optional')
+  );
+  if (!participants.length) return;
+
+  // 텔레그램 탭으로 자동 전환
+  const tgTabBtn = document.querySelector('.tab-btn[data-tab="telegram"]');
+  if (tgTabBtn) tgTabBtn.click();
+
+  let delay = 1200;
+
+  // ── 1단계: 만족도 점수 질문 ──────────────────────────
+  setTimeout(() => {
+    addTelegramRawCard(`
+      <div class="tg-survey-card">
+        <div class="tg-survey-label">📋 회의 만족도 조사</div>
+        <div class="tg-survey-question">이번 회의에 대한 만족도는 몇 점인가요?</div>
+        <div class="tg-score-row">${renderScoreRow()}</div>
+        <div class="tg-survey-hint">1 매우불만족 · 2 불만족 · 3 보통 · 4 만족 · 5 매우만족</div>
+      </div>
+    `);
+    showToast('참가자들에게 회의 만족도 설문이 발송되었습니다.', 'info');
+  }, delay);
+
+  // ── 참가자별 점수 + 정성 피드백 통합 응답 ───────────
+  delay += 1500;
+  const scores = [];
+
+  participants.forEach(emp => {
+    setTimeout(() => {
+      const resp = SURVEY_RESPONSES[emp.id] ?? SURVEY_RESPONSES.default;
+      const meta = SCORE_META[resp.score - 1];
+      scores.push(resp.score);
+      addTelegramMessage('in',
+        `**[${emp.name} ${emp.pos}]**\n` +
+        `${meta.emoji} **${resp.score}점** — ${meta.label}\n\n` +
+        `💬 ${resp.comment}`
+      );
+    }, delay);
+    delay += 1400;
+  });
+
+  // ── 결과 요약 카드 ────────────────────────────────────
+  delay += 800;
+  setTimeout(() => {
+    const avg = scores.reduce((a, b) => a + b, 0) / (scores.length || 1);
+    const avgFixed = avg.toFixed(1);
+
+    // 점수 분포 계산
+    const dist = [0, 0, 0, 0, 0];
+    scores.forEach(s => { dist[s - 1]++; });
+    const barRows = SCORE_META.map((_m, i) => {
+      const pct = scores.length ? Math.round((dist[i] / scores.length) * 100) : 0;
+      return `
+        <div class="tg-result-bar-row">
+          <span style="width:28px">${i + 1}점</span>
+          <div class="tg-result-bar">
+            <div class="tg-result-bar-fill" style="width:${pct}%"></div>
+          </div>
+          <span style="width:20px;text-align:right">${dist[i]}명</span>
+        </div>`;
+    }).join('');
+
+    addTelegramRawCard(`
+      <div class="tg-result-card">
+        <div class="tg-result-title">📊 만족도 조사 결과</div>
+        <div class="tg-result-avg">${avgFixed}점 / 5.0점</div>
+        <div class="tg-result-stars">${renderStars(avg)}</div>
+        <div class="tg-result-bar-wrap">${barRows}</div>
+        <div class="tg-result-row">
+          <span>응답자 ${scores.length}/${participants.length}명</span>
+          <span>정성 피드백 ${scores.length}건 수집 완료</span>
+        </div>
+      </div>
+    `);
+
+    addChatMessage('agent',
+      `📊 **[회의 만족도 조사 완료]**\n참가자 ${scores.length}명 전원의 피드백 수렴이 완료되었습니다.\n\n` +
+      `• **평균 만족도**: ${avgFixed}점 / 5.0점\n` +
+      `• **정성 피드백**: ${scores.length}건 수집 완료\n\n` +
+      `수렴된 피드백은 향후 회의 개선에 반영될 예정입니다.`
+    );
+    showToast(`회의 만족도 조사 완료 — 평균 ${avgFixed}점`, 'success');
+  }, delay);
+}
+
+// ────────────────────────────────────────────────────────
 // 8. VIRTUAL EMAIL (GMAIL) SIMULATOR
 // ────────────────────────────────────────────────────────
 
 function sendMail({ subject, from, to, body, attachment = null }) {
-  const mailId = 'mail_' + Math.random().toString(36).substr(2, 9);
+  const mailId = 'mail_' + Math.random().toString(36).substring(2, 11);
   const time = new Date().toLocaleDateString('ko-KR') + ' ' + new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
   
   appState.emails.unshift({
@@ -1327,14 +1532,26 @@ function setupEventListeners() {
     btn.addEventListener('click', (e) => {
       tabBtns.forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-      
+
       const tabTarget = e.currentTarget.getAttribute('data-tab');
       e.currentTarget.classList.add('active');
-      
+
       const targetPane = document.getElementById(`tab-${tabTarget}`);
       if (targetPane) targetPane.classList.add('active');
     });
   });
+
+  // 인사시스템 검색 버튼
+  const searchTrigger = document.getElementById('search-trigger');
+  if (searchTrigger) {
+    searchTrigger.addEventListener('click', () => runOrgSearch());
+  }
+  if (OrgSearchInput) {
+    OrgSearchInput.removeAttribute('readonly');
+    OrgSearchInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') runOrgSearch();
+    });
+  }
 }
 
 // 윈도우 초기 로딩 연동

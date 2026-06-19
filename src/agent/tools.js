@@ -3,12 +3,45 @@
 // ────────────────────────────────────────────────────────
 
 export const EMPLOYEES = [
-  { id: 'emp_host', name: '김경남', dept: '경남은행 디지털전략부', pos: '과장', duty: '사내 AI 기획 및 회의 주관 호스트', active: true },
-  { id: 'emp_marketing', name: '김마케', dept: '마케팅전략팀', pos: '팀장', duty: '브랜드 총괄, Q3 마케팅 전략 수립 및 플랫폼 광고 예산 집행', active: false },
-  { id: 'emp_design', name: '이디자', dept: '브랜드디자인팀', pos: '대리', duty: 'BI/CI 디자인, 브랜드 이미지 개선 및 시각 광고 시안 제작', active: false },
-  { id: 'emp_budget', name: '박예산', dept: '기획예산팀', pos: '과장', duty: '전사 사업 계획 조율, 부서별 예산 타당성 검토 및 승인', active: false },
-  { id: 'emp_dev', name: '정개발', dept: '플랫폼개발팀', pos: '수석', duty: '온라인 광고 서버 구축, 서비스 플랫폼 API 개발 및 인프라 관리', active: false },
-  { id: 'emp_hr', name: '최인사', dept: '인사총무팀', pos: '대리', duty: '사내 임직원 근무 평가, 부서 배치 및 신규 채용 프로세스 총괄', active: false }
+  // 디지털전략부
+  { id: 'emp_host',       name: '김경남', dept: '디지털전략부',   pos: '과장', duty: 'AI 기획, 디지털 혁신 전략 수립, 사내 AI 도입 로드맵 관리', tags: ['AI', '디지털', '혁신', '전략', '기획'] },
+  { id: 'emp_digital2',   name: '오디지', dept: '디지털전략부',   pos: '대리', duty: '디지털 채널 UX 기획, 모바일 앱 개선 및 고객 경험 분석', tags: ['디지털', 'UX', '모바일', '앱', '고객'] },
+
+  // 마케팅·브랜드
+  { id: 'emp_marketing',  name: '김마케', dept: '마케팅전략팀',   pos: '팀장', duty: '브랜드 총괄, Q3 마케팅 전략 수립, 플랫폼 광고 예산 집행', tags: ['마케팅', '브랜드', '광고', '전략', '예산', '캠페인'] },
+  { id: 'emp_design',     name: '이디자', dept: '브랜드디자인팀', pos: '대리', duty: 'BI/CI 디자인, 브랜드 이미지 개선, 시각 광고 시안 제작', tags: ['디자인', '브랜드', 'CI', 'BI', '광고', '시안'] },
+  { id: 'emp_contents',   name: '한콘텐', dept: '마케팅전략팀',   pos: '주임', duty: 'SNS 콘텐츠 기획·제작, 퍼포먼스 마케팅 운영 및 KPI 분석', tags: ['콘텐츠', 'SNS', '마케팅', 'KPI', '광고'] },
+
+  // 기획·예산
+  { id: 'emp_budget',     name: '박예산', dept: '기획예산팀',     pos: '과장', duty: '전사 사업 계획 조율, 부서별 예산 타당성 검토 및 승인', tags: ['예산', '기획', '비용', '사업계획', '승인'] },
+  { id: 'emp_planning',   name: '문기획', dept: '경영기획팀',     pos: '차장', duty: '경영 목표 설정, 중장기 전략 수립, 경영진 보고 자료 작성', tags: ['경영', '기획', '전략', '보고', '목표'] },
+
+  // IT·플랫폼 개발
+  { id: 'emp_dev',        name: '정개발', dept: '플랫폼개발팀',   pos: '수석', duty: '온라인 광고 서버 구축, 서비스 플랫폼 API 개발 및 인프라 관리', tags: ['개발', 'API', '서버', '인프라', '플랫폼'] },
+  { id: 'emp_dev2',       name: '강백엔', dept: '플랫폼개발팀',   pos: '선임', duty: '뱅킹 코어 시스템 연동, MSA 아키텍처 설계 및 배포 자동화', tags: ['개발', '시스템', 'MSA', '배포', '뱅킹'] },
+  { id: 'emp_data',       name: '윤데이', dept: '데이터분석팀',   pos: '과장', duty: '고객 행동 데이터 분석, 머신러닝 모델 개발, 데이터 파이프라인 구축', tags: ['데이터', '분석', 'AI', '머신러닝', '모델', '파이프라인'] },
+
+  // 정보보안
+  { id: 'emp_security',   name: '서보안', dept: '정보보안팀',     pos: '팀장', duty: '사이버 보안 정책 수립, 취약점 점검, 개인정보보호 컴플라이언스', tags: ['보안', '정보보호', '컴플라이언스', '개인정보', '취약점'] },
+  { id: 'emp_security2',  name: '임침해', dept: '정보보안팀',     pos: '대리', duty: '침해사고 대응, 보안 모니터링, 내부 보안 교육 운영', tags: ['보안', '침해', '모니터링', '교육'] },
+
+  // 리스크·컴플라이언스
+  { id: 'emp_risk',       name: '조리스', dept: '리스크관리팀',   pos: '차장', duty: '여신 리스크 평가, 자본 적정성 관리, 스트레스 테스트 운영', tags: ['리스크', '여신', '자본', '규제', '평가'] },
+  { id: 'emp_compliance', name: '권컴플', dept: '컴플라이언스팀', pos: '과장', duty: '금융감독 규정 준수, 내부통제 심사, 법규 해석 지원', tags: ['컴플라이언스', '규제', '법규', '내부통제', '감독'] },
+
+  // 영업·고객
+  { id: 'emp_sales',      name: '노영업', dept: '영업전략팀',     pos: '팀장', duty: 'WM 영업 전략 수립, 채널별 영업 KPI 관리, 고객 자산관리 솔루션 기획', tags: ['영업', 'WM', '고객', '자산관리', '전략', 'KPI'] },
+  { id: 'emp_cx',         name: '류고객', dept: '고객서비스팀',   pos: '과장', duty: '고객 VOC 분석, CS 프로세스 개선, 고객만족도 조사 운영', tags: ['고객', 'VOC', 'CS', '만족도', '서비스'] },
+
+  // 인사·총무
+  { id: 'emp_hr',         name: '최인사', dept: '인사총무팀',     pos: '대리', duty: '사내 임직원 근무 평가, 부서 배치, 신규 채용 프로세스 총괄', tags: ['인사', '채용', '평가', '교육', '조직'] },
+  { id: 'emp_edu',        name: '송교육', dept: '인사총무팀',     pos: '주임', duty: '사내 교육 프로그램 기획, 외부 연수 운영, 역량 개발 관리', tags: ['교육', '연수', '역량', '인재', '학습'] },
+
+  // 재무·회계
+  { id: 'emp_finance',    name: '변재무', dept: '재무회계팀',     pos: '차장', duty: '재무제표 작성, 원가 분석, 손익 모니터링, 세무 신고 관리', tags: ['재무', '회계', '손익', '세무', '원가'] },
+
+  // 법무
+  { id: 'emp_legal',      name: '엄법무', dept: '법무팀',         pos: '과장', duty: '계약서 검토, 소송 대응, 금융 규제 법률 자문 및 내부 법무 지원', tags: ['법무', '계약', '규제', '법률', '소송'] },
 ];
 
 export const BASE_SCHEDULES = {
@@ -192,7 +225,7 @@ export const agentTools = {
   },
 
   // 비대면 화상회의 링크 생성 (자원 예약 에이전트)
-  create_online_meeting_link({ provider = 'Teams', topic = '' }) {
+  create_online_meeting_link({ provider = 'Teams', topic: _topic = '' }) {
     return {
       provider,
       link: 'https://teams.microsoft.com/l/meetup-join/ai-coordinator-9988-1234'
