@@ -457,7 +457,7 @@ function getActionButtonLabel(action) {
     ...AGENT_MESSAGES[7].actions,
     ...AGENT_MESSAGES[8].actions,
     ...AGENT_MESSAGES[8].recordingActions,
-    ...AGENT_MESSAGES[8].minutesActions
+    ...AGENT_MESSAGES[9].actions
   ];
   const found = allActions.find(a => a.action === action);
   return found ? found.text : action;
