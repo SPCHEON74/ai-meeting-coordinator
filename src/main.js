@@ -341,6 +341,7 @@ async function handleAction(actionName) {
       appState.selectedDate = '2026-06-20';
       appState.selectedTimeStart = '14:00';
       appState.selectedTimeEnd = '15:30';
+      CalDateLabel.textContent = "2026년 6월 20일 (토요일)";
       showToast("회의 일정이 6월 20일 14:00로 가설정되었습니다.", "success");
       await runStep(3);
       break;
