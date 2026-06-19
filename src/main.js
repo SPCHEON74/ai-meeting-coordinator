@@ -1570,7 +1570,6 @@ function setupEventListeners() {
 // 아코디언 토글 (캘린더 / 자원 예약 / 메신저)
 function setupCollapsibles() {
   const pairs = [
-    { headerId: 'cal-panel-header',  bodyId: 'cal-panel-body',         arrowId: 'cal-arrow' },
     { headerId: 'res-panel-header',  bodyId: 'resource-body-content',  arrowId: 'res-arrow' },
     { headerId: 'monitor-tabs-header', bodyId: 'monitor-panel-body',   arrowId: 'monitor-arrow' },
   ];
