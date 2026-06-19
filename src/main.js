@@ -344,6 +344,7 @@ async function handleAction(actionName) {
       appState.selectedTimeStart = '14:00';
       appState.selectedTimeEnd = '15:30';
       CalDateLabel.textContent = "2026년 6월 20일 (토요일)";
+      SmartSuggestionBox.classList.add('hidden');
       showToast("회의 일정이 6월 20일 14:00로 가설정되었습니다.", "success");
       await runStep(3);
       break;
@@ -353,6 +354,7 @@ async function handleAction(actionName) {
       appState.selectedTimeStart = '10:00';
       appState.selectedTimeEnd = '11:30';
       CalDateLabel.textContent = "2026년 6월 24일 (수요일)";
+      SmartSuggestionBox.classList.add('hidden');
       showToast("회의 일정이 6월 24일 10:00로 가설정되었습니다.", "success");
       await runStep(3);
       break;
