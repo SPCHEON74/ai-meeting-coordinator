@@ -923,8 +923,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  min-height: 190px;
-  max-height: 190px;
+  min-height: 460px;
   overflow-y: auto;
 }
 
