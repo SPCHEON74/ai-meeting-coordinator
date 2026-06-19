@@ -26,14 +26,10 @@ let appState = {
   selectedTimeEnd: '15:30',
   
   // 참석자 정보 및 배정 (required: 필수, optional: 선택, excluded: 제외)
-  participants: {
-    emp_host: 'required', // 호스트는 항상 필수
-    emp_marketing: 'required', // 마케팅 키워드 매칭
-    emp_design: 'required',    // 브랜드 디자인 매칭
-    emp_budget: 'required',    // 예산 키워드 매칭
-    emp_dev: 'excluded',
-    emp_hr: 'excluded'
-  },
+  // EMPLOYEES 전체를 excluded 기본값으로 초기화 → init()에서 localStorage 병합
+  participants: Object.fromEntries(
+    EMPLOYEES.map(e => [e.id, e.id === 'emp_host' ? 'required' : 'excluded'])
+  ),
   
   // 자원 예약 상태
   meetingType: 'offline', // 'offline' (대면) | 'online' (비대면)
@@ -170,19 +166,24 @@ const MailCountBadge = document.getElementById('mail-count');
 
 // 시뮬레이터 구동 함수
 function init() {
-  // 검색 페이지에서 저장된 참석자 역할이 있으면 병합
+  // localStorage에 저장된 참석자 역할 복원 (전체 직원 대상)
   const saved = loadParticipants();
-  if (saved) {
+  if (saved && Object.keys(saved).length > 0) {
     Object.entries(saved).forEach(([id, role]) => {
-      if (id in appState.participants) appState.participants[id] = role;
+      appState.participants[id] = role;
     });
+  } else {
+    // 저장값 없을 때만 시뮬레이션 기본값 적용
+    appState.participants['emp_marketing'] = 'required';
+    appState.participants['emp_design']    = 'required';
+    appState.participants['emp_budget']    = 'required';
   }
 
   // 검색 페이지에서 역할 변경 시 실시간 반영
   onParticipantsChanged(newRoles => {
-    if (appState.currentStep > 4) return; // 확정 후에는 무시
+    if (appState.currentStep > 4) return;
     Object.entries(newRoles).forEach(([id, role]) => {
-      if (id in appState.participants) appState.participants[id] = role;
+      appState.participants[id] = role;
     });
     renderOrg();
     renderCalendar();
@@ -832,6 +833,8 @@ function addTelegramMessage(dir, text, time = null) {
   
   TgHistory.appendChild(msg);
   TgHistory.scrollTop = TgHistory.scrollHeight;
+  const monitorBody = document.getElementById('monitor-panel-body');
+  if (monitorBody?.classList.contains('collapsed')) showInboxNotification('telegram');
 }
 
 // 24시간 전 참석 여부 응답 시뮬레이션
@@ -1022,6 +1025,8 @@ function sendMail({ subject, from, to, body, attachment = null }) {
   });
   
   renderGmailList();
+  const monitorBody = document.getElementById('monitor-panel-body');
+  if (monitorBody?.classList.contains('collapsed')) showInboxNotification('email');
 }
 
 function renderGmailList() {
@@ -1554,5 +1559,64 @@ function setupEventListeners() {
   }
 }
 
+// 아코디언 토글 (캘린더 / 자원 예약 / 메신저)
+function setupCollapsibles() {
+  const pairs = [
+    { headerId: 'cal-panel-header',  bodyId: 'cal-panel-body',         arrowId: 'cal-arrow' },
+    { headerId: 'res-panel-header',  bodyId: 'resource-body-content',  arrowId: 'res-arrow' },
+    { headerId: 'monitor-tabs-header', bodyId: 'monitor-panel-body',   arrowId: 'monitor-arrow' },
+  ];
+  pairs.forEach(({ headerId, bodyId, arrowId }) => {
+    const header = document.getElementById(headerId);
+    const body   = document.getElementById(bodyId);
+    const arrow  = document.getElementById(arrowId);
+    if (!header || !body) return;
+    header.addEventListener('click', (e) => {
+      if (e.target.closest('.tab-btn')) return; // 탭 버튼 클릭은 토글 제외
+      const isCollapsed = body.classList.toggle('collapsed');
+      if (arrow) arrow.textContent = isCollapsed ? '▼' : '▲';
+    });
+  });
+}
+
+// 수신 알림 토스트 (메신저/이메일)
+function showInboxNotification(type) {
+  const label = type === 'telegram' ? '메신저' : '이메일';
+  const n = document.createElement('div');
+  n.className = 'inbox-notification';
+  n.innerHTML = `<span class="inbox-notif-icon">${type === 'telegram' ? '💬' : '📧'}</span> ${label} 수신되었습니다.`;
+  n.addEventListener('click', () => {
+    // 클릭 시 해당 패널 열기
+    const body  = document.getElementById('monitor-panel-body');
+    const arrow = document.getElementById('monitor-arrow');
+    if (body?.classList.contains('collapsed')) {
+      body.classList.remove('collapsed');
+      if (arrow) arrow.textContent = '▲';
+    }
+    // 해당 탭 활성화
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    const tabId = type === 'telegram' ? 'telegram' : 'gmail';
+    document.querySelector(`.tab-btn[data-tab="${tabId}"]`)?.classList.add('active');
+    document.getElementById(`tab-${tabId}`)?.classList.add('active');
+    n.remove();
+  });
+  document.body.appendChild(n);
+  setTimeout(() => n.classList.add('show'), 50);
+  setTimeout(() => { n.classList.remove('show'); setTimeout(() => n.remove(), 400); }, 5000);
+}
+
+// 좌측 패널 탭 전환 (조율 센터 ↔ 모니터링)
+function setupLeftTabs() {
+  document.querySelectorAll('.left-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.left-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.left-tab-pane').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('left-tab-' + btn.dataset.leftTab)?.classList.add('active');
+    });
+  });
+}
+
 // 윈도우 초기 로딩 연동
-window.addEventListener('DOMContentLoaded', init);
+window.addEventListener('DOMContentLoaded', () => { init(); setupCollapsibles(); setupLeftTabs(); });

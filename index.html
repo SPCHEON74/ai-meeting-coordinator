@@ -16,7 +16,7 @@
         <div class="header-logo">
           <div class="logo-block">
             <img src="/logo_snap.png" alt="SNAP logo" class="logo-img" />
-            <span class="logo-sub">AI MEETING COORDINATOR</span>
+            <span class="logo-sub">AI meeting coordinator</span>
           </div>
         </div>
         
@@ -80,86 +80,92 @@
       <!-- Main Layout -->
       <main class="app-layout">
         
-        <!-- LEFT PANEL: AI Agent Chat & Log -->
+        <!-- LEFT PANEL: AI Agent Chat + Monitoring (탭 결합) -->
         <section class="panel panel-left card">
-          <div class="panel-header">
-            <div class="panel-title-container">
-              <div class="panel-icon status-active"></div>
-              <h2>AI 에이전트 조율 센터</h2>
-            </div>
-            <div class="agent-status-badge" id="agent-active-badge">대기 중</div>
+
+          <!-- 탭 헤더 -->
+          <div class="left-tab-bar">
+            <button class="left-tab-btn active" data-left-tab="chat">
+              <div class="panel-icon status-active" style="width:8px;height:8px;margin:0;"></div>
+              AI 조율 센터
+              <span class="agent-status-badge" id="agent-active-badge" style="font-size:0.6rem;padding:2px 6px;">대기 중</span>
+            </button>
+            <button class="left-tab-btn" data-left-tab="monitor">
+              ⚙️ 모니터링
+            </button>
           </div>
-          
-          <!-- Conversations Feed -->
-          <div class="panel-body chat-container" id="chat-messages" style="flex: 1.2; min-height: 0;">
-            <!-- Messages dynamic inject -->
-          </div>
-          
-          <!-- Multi-Agent Collaboration Network -->
-          <div class="agent-network-bar" id="agent-network-bar">
-            <div class="agent-node active" data-agent="coordinator">
-              <span class="agent-node-icon">🧭</span>
-              <span class="agent-node-label">조율 에이전트</span>
+
+          <!-- 탭 1: AI 에이전트 조율 센터 -->
+          <div class="left-tab-pane active" id="left-tab-chat">
+            <div class="panel-body chat-container" id="chat-messages" style="flex:1;min-height:0;">
+              <!-- Messages dynamic inject -->
             </div>
-            <div class="agent-link" id="link-resource"><span class="agent-link-dot"></span></div>
-            <div class="agent-node" data-agent="resource">
-              <span class="agent-node-icon">🏢</span>
-              <span class="agent-node-label">자원 예약</span>
-            </div>
-            <div class="agent-link" id="link-rsvp"><span class="agent-link-dot"></span></div>
-            <div class="agent-node" data-agent="rsvp">
-              <span class="agent-node-icon">📨</span>
-              <span class="agent-node-label">RSVP 관리</span>
-            </div>
-            <div class="agent-link" id="link-scribe"><span class="agent-link-dot"></span></div>
-            <div class="agent-node" data-agent="scribe">
-              <span class="agent-node-icon">📝</span>
-              <span class="agent-node-label">회의록 작성</span>
+            <div class="panel-footer chat-controls">
+              <div class="quick-actions-title">현재 단계 추천 액션</div>
+              <div class="quick-actions-wrapper" id="quick-actions-container"></div>
+              <div class="chat-input-wrapper">
+                <input type="text" id="chat-user-input" placeholder="에이전트에게 지시를 내리세요..." />
+                <button id="chat-send-btn" class="btn btn-primary btn-icon-only">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
 
-          <!-- Agent Inner Monologue (ReAct Console) -->
-          <div class="agent-monologue-panel">
-            <div class="monologue-header">
-              <span>⚙️ 에이전트 추론 콘솔 (ReAct Log)</span>
-              <span class="console-pulse"></span>
+          <!-- 탭 2: 에이전트 모니터링 -->
+          <div class="left-tab-pane" id="left-tab-monitor">
+            <div class="agent-network-bar" id="agent-network-bar">
+              <div class="agent-node active" data-agent="coordinator">
+                <span class="agent-node-icon">🧭</span>
+                <span class="agent-node-label">조율 에이전트</span>
+              </div>
+              <div class="agent-link" id="link-resource"><span class="agent-link-dot"></span></div>
+              <div class="agent-node" data-agent="resource">
+                <span class="agent-node-icon">🏢</span>
+                <span class="agent-node-label">자원 예약</span>
+              </div>
+              <div class="agent-link" id="link-rsvp"><span class="agent-link-dot"></span></div>
+              <div class="agent-node" data-agent="rsvp">
+                <span class="agent-node-icon">📨</span>
+                <span class="agent-node-label">RSVP 관리</span>
+              </div>
+              <div class="agent-link" id="link-scribe"><span class="agent-link-dot"></span></div>
+              <div class="agent-node" data-agent="scribe">
+                <span class="agent-node-icon">📝</span>
+                <span class="agent-node-label">회의록 작성</span>
+              </div>
             </div>
-            <div class="monologue-body" id="agent-monologue-console">
-              <div class="console-placeholder">에이전트가 작동하면 사고 흐름(Thought-Action-Observation)이 실시간으로 여기에 기록됩니다...</div>
+            <div class="agent-monologue-panel" style="flex:1;min-height:0;">
+              <div class="monologue-header">
+                <span>⚙️ 에이전트 추론 콘솔 (ReAct Log)</span>
+                <span class="console-pulse"></span>
+              </div>
+              <div class="monologue-body" id="agent-monologue-console">
+                <div class="console-placeholder">에이전트가 작동하면 사고 흐름(Thought-Action-Observation)이 실시간으로 여기에 기록됩니다...</div>
+              </div>
             </div>
           </div>
-          
-          <!-- Bottom Controls & Quick Actions -->
-          <div class="panel-footer chat-controls">
-            <div class="quick-actions-title">현재 단계 추천 액션</div>
-            <div class="quick-actions-wrapper" id="quick-actions-container">
-              <!-- Actions dynamic inject -->
-            </div>
-            
-            <div class="chat-input-wrapper">
-              <input type="text" id="chat-user-input" placeholder="에이전트에게 지시를 내리세요... (예: 내 일정 비어있는 일자 알려줘)" />
-              <button id="chat-send-btn" class="btn btn-primary btn-icon-only">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
-                </svg>
-              </button>
-            </div>
-          </div>
+
         </section>
 
         <!-- CENTER PANEL: Smart Scheduler & Booking -->
         <section class="panel panel-center card">
-          <div class="panel-header">
+          <div class="panel-header collapsible-header" id="cal-panel-header">
             <div class="panel-title-container">
               <svg xmlns="http://www.w3.org/2000/svg" class="panel-title-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               <h2>캘린더 & 스마트 일정표</h2>
             </div>
-            <div class="calendar-mode-indicator" id="calendar-info-text">호스트 캘린더 조회</div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="calendar-mode-indicator" id="calendar-info-text">호스트 캘린더 조회</div>
+              <span class="collapse-arrow" id="cal-arrow">▲</span>
+            </div>
           </div>
 
-          <div class="panel-body scheduler-body">
+          <div class="panel-body scheduler-body collapsible-body collapsed" id="cal-panel-body">
             <!-- Host / Participants Calendar Grid -->
             <div class="calendar-container">
               <!-- Calendar Header -->
@@ -205,11 +211,14 @@
 
             <!-- Resource Reservation Area -->
             <div class="resource-reservation-card card-inner" id="resource-section">
-              <div class="inner-header">
-                <h3>자원 예약 에이전트 연동 (회의실 및 화상 정보)</h3>
-                <span class="resource-type-toggle" id="meeting-type-badge">대면 회의</span>
+              <div class="inner-header collapsible-header" id="res-panel-header">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <h3>자원 예약 에이전트 연동 (회의실 및 화상 정보)</h3>
+                  <span class="resource-type-toggle" id="meeting-type-badge">대면 회의</span>
+                </div>
+                <span class="collapse-arrow" id="res-arrow">▼</span>
               </div>
-              <div class="resource-body" id="resource-body-content">
+              <div class="resource-body collapsible-body collapsed" id="resource-body-content">
                 <!-- Resource state dynamic -->
               </div>
             </div>
@@ -243,7 +252,7 @@
 
           <!-- Tabbed Monitor Panel (Telegram and Gmail Simulator) -->
           <div class="panel-section monitor-section card">
-            <div class="monitor-tabs">
+            <div class="monitor-tabs collapsible-header" id="monitor-tabs-header">
               <button class="tab-btn active" data-tab="telegram">
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -256,9 +265,10 @@
                 </svg>
                 가상 이메일함 (Gmail)
               </button>
+              <span class="collapse-arrow" id="monitor-arrow">▼</span>
             </div>
 
-            <div class="panel-body monitor-tab-content">
+            <div class="panel-body monitor-tab-content collapsible-body collapsed" id="monitor-panel-body">
               <!-- Telegram Tab -->
               <div class="tab-pane active" id="tab-telegram">
                 <div class="telegram-phone">
