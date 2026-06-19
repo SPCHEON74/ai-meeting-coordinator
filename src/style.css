@@ -866,22 +866,23 @@ body {
    CENTER PANEL - INTERACTIVE SCHEDULER & RESERVATION
 ──────────────────────────────────────────────────────── */
 
-/* Cal section (2/3) + Resource section (1/3) inside center panel */
-.cal-section {
-  flex: 2;
+/* Center column: 두 독립 카드를 세로로 2/3 + 1/3 배치 */
+.panel-center-col {
   display: flex;
   flex-direction: column;
+  gap: 16px;
   min-height: 0;
-  border-bottom: 1px solid var(--card-border);
+  overflow: hidden;
 }
 
-.resource-section-outer {
+.panel-cal {
+  flex: 2;
+  min-height: 0;
+}
+
+.panel-resource {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
-  padding: 12px 16px;
-  display: flex;
-  flex-direction: column;
 }
 
 .scheduler-body {
@@ -1174,7 +1175,7 @@ body {
 }
 
 .resource-body.collapsible-body {
-  max-height: 400px;
+  max-height: 800px;
 }
 
 .inner-header {
