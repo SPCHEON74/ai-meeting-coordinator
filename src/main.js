@@ -157,6 +157,7 @@ const CalendarInfoText = document.getElementById('calendar-info-text');
 const OrgList = document.getElementById('org-list');
 const OrgSearchInput = document.getElementById('org-search-input');
 const TgHistory = document.getElementById('tg-history');
+const AgentActiveBadge = document.getElementById('agent-active-badge');
 
 // 인사 검색 상태 (추천 엔진 결과)
 let orgSearchState = { tokens: [], scoreMap: {} };
@@ -203,7 +204,7 @@ async function runStep(step) {
   updateStepper();
 
   // AI Agent 상태 변경 안내
-  const activeBadge = document.getElementById('agent-active-badge');
+  const activeBadge = AgentActiveBadge;
   if (activeBadge) {
     activeBadge.textContent = "생각 중...";
     activeBadge.className = "agent-status-badge status-writing";
@@ -295,7 +296,7 @@ function handleStepTransitions(step) {
 async function handleAction(actionName) {
   addChatMessage('user', getActionButtonLabel(actionName));
   
-  const activeBadge = document.getElementById('agent-active-badge');
+  const activeBadge = AgentActiveBadge;
   if (activeBadge) {
     activeBadge.textContent = "처리 중...";
     activeBadge.className = "agent-status-badge status-writing";
@@ -851,9 +852,7 @@ function simulateTelegramRSVP() {
   
   activeParticipants.forEach(emp => {
     setTimeout(() => {
-      // 박예산 과장(기획예산팀)은 캘린더가 비어있으므로 YES, 김마케와 이디자 대리도 캘린더 재조정으로 비어있으므로 YES
-      // 시뮬레이션을 위해 김마케는 YES, 이디자는 YES, 가상의 인물이 간혹 미정 회신하도록 함
-      const answer = emp.id === 'emp_budget' ? 'yes' : (emp.id === 'emp_design' ? 'yes' : 'yes');
+      const answer = 'yes';
       appState.telegramAnswers[emp.id] = answer;
       
       const answerText = answer === 'yes' ? '👍 참석 가능합니다.' : '👎 불참 (사유: 외근 일정)';
@@ -1172,6 +1171,7 @@ AI Meeting Agent 드림`;
 
 let transInterval = null;
 function startLiveTranscriptionSimulation() {
+  if (transInterval) { clearInterval(transInterval); transInterval = null; }
   const transContainer = document.createElement('div');
   transContainer.className = 'agent-embed-card';
   transContainer.innerHTML = `
@@ -1351,7 +1351,7 @@ function openMinutesFeedbackModal() {
 
 // 최종 피드백 반영 및 배포 로직
 async function applyMinutesFeedbackAndDistribute(baseText, feedback) {
-  const activeBadge = document.getElementById('agent-active-badge');
+  const activeBadge = AgentActiveBadge;
   if (activeBadge) {
     activeBadge.textContent = "반영 처리 중...";
     activeBadge.className = "agent-status-badge status-writing";
@@ -1438,7 +1438,7 @@ function setupEventListeners() {
     addChatMessage('user', text);
     input.value = '';
 
-    const activeBadge = document.getElementById('agent-active-badge');
+    const activeBadge = AgentActiveBadge;
     if (activeBadge) {
       activeBadge.textContent = "생각 중...";
       activeBadge.className = "agent-status-badge status-writing";

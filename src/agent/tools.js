@@ -2,6 +2,9 @@
 // MOCK DATA (회사 인사/캘린더/자원 데이터베이스)
 // ────────────────────────────────────────────────────────
 
+export const HOST_ID = 'emp_host';
+export const DEFAULT_ROOM_ID = 'room_creative';
+
 export const EMPLOYEES = [
   // 디지털전략부
   { id: 'emp_host',       name: '김경남', dept: '디지털전략부',   pos: '과장', duty: 'AI 기획, 디지털 혁신 전략 수립, 사내 AI 도입 로드맵 관리', tags: ['AI', '디지털', '혁신', '전략', '기획'] },
@@ -243,7 +246,8 @@ export const agentTools = {
       const emp = EMPLOYEES.find(e => e.id === userId);
       return { userId, name: emp?.name, pos: emp?.pos, answer: 'yes' };
     });
-    return { responses, attendanceRate: responses.length ? 100 : 0 };
+    const yesCount = responses.filter(r => r.answer === 'yes').length;
+    return { responses, attendanceRate: responses.length ? Math.round(yesCount / responses.length * 100) : 0 };
   },
 
   // 회의 취소 및 데이터 정리

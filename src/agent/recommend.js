@@ -27,3 +27,15 @@ export function buildScoreMap(employees, text) {
 
   return { tokens, scoreMap };
 }
+
+// 텍스트로 직원 추천 목록을 점수 내림차순으로 반환 (search.js / main.js 공용)
+export function recommendEmployees(employees, text, hostId = 'emp_host') {
+  const tokens = tokenize(text);
+  if (!tokens.length) return { tokens: [], results: [] };
+  const results = employees
+    .filter(e => e.id !== hostId)
+    .map(emp => ({ emp, ...scoreEmployee(emp, tokens) }))
+    .filter(r => r.score > 0)
+    .sort((a, b) => b.score - a.score);
+  return { tokens, results };
+}

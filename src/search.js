@@ -1,5 +1,5 @@
 import { EMPLOYEES } from './agent/tools.js';
-import { tokenize, scoreEmployee } from './agent/recommend.js';
+import { recommendEmployees } from './agent/recommend.js';
 import { loadParticipants, saveParticipants, onParticipantsChanged } from './agent/participantState.js';
 
 // ── 참석자 역할 상태 ─────────────────────────────────────
@@ -31,14 +31,7 @@ function showSyncToast(empId, role) {
 
 // ── 추천 엔진 ────────────────────────────────────────────
 function recommend(title, agenda) {
-  const tokens = tokenize(`${title} ${agenda}`);
-  if (!tokens.length) return { tokens: [], results: [] };
-  const results = EMPLOYEES
-    .filter(e => e.id !== 'emp_host')
-    .map(emp => ({ emp, ...scoreEmployee(emp, tokens) }))
-    .filter(r => r.score > 0)
-    .sort((a, b) => b.score - a.score);
-  return { tokens, results };
+  return recommendEmployees(EMPLOYEES, `${title} ${agenda}`);
 }
 
 // ── 마지막 검색 결과 캐시 (역할 변경 후 재렌더 용) ───────

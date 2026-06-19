@@ -108,9 +108,10 @@ body {
 .logo-sub {
   font-size: 0.5rem;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   color: #8b949e;
   white-space: nowrap;
+  text-transform: uppercase;
 }
 
 .logo-img {
@@ -119,23 +120,6 @@ body {
   object-fit: contain;
   border-radius: 2px;
   display: block;
-}
-
-.logo-sub {
-  font-size: 0.52rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: #8b949e;
-  white-space: nowrap;
-  text-transform: uppercase;
-}
-
-.logo-badge {
-  font-size: 0.7rem;
-  color: var(--accent-cyan);
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
 }
 
 /* Header Controls / Auto-Mode Toggle */
@@ -631,6 +615,30 @@ body {
 .agent-node.active .agent-node-label {
   color: var(--accent-cyan);
   font-weight: 600;
+}
+
+.agent-status-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  border: 1px solid var(--card-border);
+  letter-spacing: 0.03em;
+  transition: background 0.3s, color 0.3s;
+}
+
+.agent-status-badge.status-writing {
+  background: rgba(88, 166, 255, 0.15);
+  color: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+}
+
+.agent-status-badge.status-working {
+  background: rgba(63, 185, 80, 0.15);
+  color: var(--accent-green);
+  border-color: var(--accent-green);
 }
 
 .agent-link {
@@ -1239,6 +1247,8 @@ body {
   align-items: center;
   gap: 4px;
   flex-wrap: wrap;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--card-border);
 }
 
 .monitor-tabs .collapse-arrow {
@@ -1408,12 +1418,6 @@ body {
 }
 
 /* Tabs for Monitor Pane */
-.monitor-tabs {
-  display: flex;
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--card-border);
-}
-
 .tab-btn {
   flex: 1;
   background: none;
@@ -2058,9 +2062,6 @@ body {
    RESPONSIVE LAYOUT adjustments
 ──────────────────────────────────────────────────────── */
 @media (max-width: 1200px) {
-  .app-layout {
-    grid-template-columns: 1fr 1fr 1fr;
-  }
   .stepper-container {
     max-width: 45%;
   }
