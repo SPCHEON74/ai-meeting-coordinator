@@ -212,14 +212,14 @@ body {
 .stepper-container {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 10px;
   position: relative;
   justify-content: center;
 }
 
 .stepper-track {
   position: absolute;
-  top: 15px;
+  top: 13px;
   left: 10px;
   right: 10px;
   height: 2px;
@@ -237,8 +237,8 @@ body {
 }
 
 .step-number {
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background: var(--bg-secondary);
   border: 2px solid var(--bg-tertiary);
@@ -246,15 +246,15 @@ body {
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   transition: var(--transition-smooth);
 }
 
 .step-label {
-  font-size: 0.72rem;
+  font-size: 0.62rem;
   font-weight: 500;
-  margin-top: 6px;
+  margin-top: 4px;
   color: var(--text-muted);
   transition: var(--transition-smooth);
   white-space: nowrap;

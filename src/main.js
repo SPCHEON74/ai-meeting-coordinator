@@ -133,9 +133,11 @@ const AGENT_MESSAGES = {
     ],
     recordingActions: [
       { text: "회의 종료 및 AI 회의록 초안 생성 요청", action: "stop_recording" }
-    ],
-    minutesReady: "회의가 성공적으로 종료되었습니다!\n녹취록을 기반으로 AI 에이전트가 **회의록 초안(안건 요약, 결정사항, Action Item)**을 신속하게 정리했습니다. \n\n이 회의록을 호스트 및 필수 참가자들에게 공유하고 **피드백 요청 메일**을 발송했습니다. 회의록 내용을 검토한 후, 수정 피드백을 입력하여 최종본을 배포해 주세요.",
-    minutesActions: [
+    ]
+  },
+  9: {
+    init: "회의가 성공적으로 종료되었습니다!\n녹취록을 기반으로 AI 에이전트가 **회의록 초안(안건 요약, 결정사항, Action Item)**을 신속하게 정리했습니다.\n\n이 회의록을 호스트 및 필수 참가자들에게 공유하고 **피드백 요청 메일**을 발송했습니다. 회의록 내용을 검토한 후, 수정 피드백을 입력하여 최종본을 배포해 주세요.",
+    actions: [
       { text: "회의록 검토 및 피드백 수정/최종 공유", action: "edit_minutes" }
     ]
   }
@@ -432,10 +434,9 @@ async function handleAction(actionName) {
     case "stop_recording":
       appState.isRecording = false;
       showToast("회의 녹화가 종료되었으며 AI가 회의록 분석을 마쳤습니다.", "success");
-      addChatMessage('agent', AGENT_MESSAGES[8].minutesReady);
-      renderQuickActions(AGENT_MESSAGES[8].minutesActions);
       sendMinutesDraftEmails();
       simulateSatisfactionSurvey();
+      await runStep(9);
       break;
       
     case "edit_minutes":
@@ -1398,7 +1399,11 @@ async function applyMinutesFeedbackAndDistribute(baseText, feedback) {
   });
 
   showToast("최종 조율 회의록이 전원에게 정상 배송되었습니다.", "success");
-  
+
+  // 10단계 스테퍼 완료 표시
+  appState.currentStep = 10;
+  updateStepper();
+
   // 최종 시나리오 단계 종료
   ActionContainer.innerHTML = `
     <button class="btn btn-secondary" onclick="window.location.reload()">새 회의 조율 시작하기 (리셋)</button>

@@ -178,6 +178,21 @@ export const SCENARIOS = {
     { type: 'OUTPUT', agent: 'coordinator', text: '음성 자동 녹음 및 속기를 대기하고 있습니다.' }
   ],
 
+  step_9: [
+    { type: 'THOUGHT', agent: 'scribe', text: '회의 종료 확인. 축적된 실시간 속기 데이터를 분석하여 안건 요약·결정 사항·Action Item을 자동 구조화합니다.' },
+    {
+      type: 'ACTION', agent: 'scribe', tool: 'summarize_transcript_to_minutes',
+      args: () => ({ transcriptLength: 512 }),
+      observation: (r) => `안건 요약 ${r.summaryCount}개, 결정 사항 ${r.decisionCount}개, Action Item ${r.actionItemCount}개 구조화 완료.`
+    },
+    {
+      type: 'ACTION', agent: 'scribe', tool: 'send_minutes_draft_for_review',
+      args: (s) => ({ recipients: namesOf(requiredIds(s)) }),
+      observation: (r) => `회의록 초안 검토 요청 메일 발송 성공 (수신: ${r.recipients.join(', ')}).`
+    },
+    { type: 'OUTPUT', agent: 'coordinator', text: 'AI 회의록 초안 완성. 호스트 및 필수 참가자 검토 대기 중.' }
+  ],
+
   action_start_recording: [
     { type: 'THOUGHT', agent: 'coordinator', text: '호스트가 회의 음성 속기를 개시함. 마이크 스트림 활성화를 회의록 작성 에이전트에게 요청.' },
     {
